@@ -125,3 +125,51 @@ contains multiple sites with different URLs. You then simply have to define erro
 within a "location" block or other rule that matches each site. Similarly, you can generate dedicated error documents
 for each type of error (404, 403, 500, etc.) which show different error messages. Or you can use the same static file
 for multiple different error types or domains.
+
+PSR-14 Events
+-------------
+
+Several events are included with the extension:
+
+* `BusyNoggin\StaticErrorPages\Event\AfterSourceReadEvent` which allows you to the HTML source after it is read from
+  a static file.
+* `BusyNoggin\StaticErrorPages\Event\AfterStaticStoredEvent` which allows you to trigger an action right after a static
+  file has been written.
+* `BusyNoggin\StaticErrorPages\Event\AfterUrlFetchedEvent` which allows you to change the HTML of a fetched URL before
+  it is saved as a static file.
+* `BusyNoggin\StaticErrorPages\Event\AfterUrlResolvedEvent` which allows you to change the URL before a page is fetched.
+* `BusyNoggin\StaticErrorPages\Event\BeforeUrlFetchEvent` which allows you to change the identifier, TTL or "verify ssl"
+  options before any URL fetching begins.
+* `BusyNoggin\StaticErrorPages\Event\ErrorPageEvent` which allows you to change the HTML source of a static page right
+  before it is delivered as a response from TYPO3 - or simply trigger various actions when an error is handled.
+* `BusyNoggin\StaticErrorPages\Event\IsExpiredEvent` which allows you to change the "is expired?" decision.
+
+These events are subscribed to the same way any other PSR-14 event is subscribed to in TYPO3.
+
+In `Services.yaml` of your extension:
+
+```yaml
+  MyVendor\MyExtension\EventListener\ErrorPageEventListener:
+    public: true
+    tags:
+      - name: event.listener
+        identifier: 'my-error-page-event-listener'
+        method: 'handleEvent'
+        event: BusyNoggin\StaticErrorPages\Event\ErrorPageEvent
+```
+
+And the event listener class:
+
+```php
+namespace MyVendor\MyExtension\EventListener;
+
+use BusyNoggin\StaticErrorPages\Event\ErrorPageEvent;
+
+class ErrorPageEventListener
+{
+    public function handleEvent(ErrorPageEvent $event): void
+    {
+        // Your code to manipulate the event data or trigger other actions
+    }
+}
+```
