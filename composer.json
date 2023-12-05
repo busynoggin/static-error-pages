@@ -1,0 +1,20 @@
+{
+	"name": "busy-noggin/static-error-pages",
+	"type": "typo3-cms-extension",
+	"description": "Integration to serve error documents as TTL-configurable and auto-refreshing static versions of an URL or TYPO3 page.",
+	"license": ["GPL-2.0+"],
+	"require": {
+		"php": "^8.2",
+		"typo3/cms-core": "^11.5 || ^12.4"
+	},
+	"autoload": {
+		"psr-4": {
+			"BusyNoggin\\StaticErrorPages\\": "Classes/"
+		}
+	},
+	"extra": {
+		"typo3/cms": {
+			"extension-key": "static_error_pages"
+		}
+	}
+}

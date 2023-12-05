@@ -1,0 +1,14 @@
+services:
+  _defaults:
+    autowire: true
+    autoconfigure: true
+    public: false
+  BusyNoggin\StaticErrorPages\Hook\DataHandlerSubscriber:
+    public: true
+  BusyNoggin\StaticErrorPages\Service\StaticVersionFetcher:
+    public: true
+  BusyNoggin\StaticErrorPages\Command\NotFoundCommand:
+    tags:
+      - name: 'console.command'
+        command: 'notfound:static'
+        schedulable: true
