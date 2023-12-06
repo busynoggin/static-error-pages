@@ -2,13 +2,13 @@
 
 if (\TYPO3\CMS\Core\Utility\ExtensionManagementUtility::isLoaded('scheduler')) {
     $GLOBALS['TYPO3_CONF_VARS']['SC_OPTIONS']['t3lib/class.t3lib_tcemain.php']['processDatamapClass'][] =
-        \BusyNoggin\StaticNotFound\Hook\DataHandlerSubscriber::class;
+        \BusyNoggin\StaticErrorPages\Hook\DataHandlerSubscriber::class;
     $GLOBALS['TYPO3_CONF_VARS']['SC_OPTIONS']['t3lib/class.t3lib_tcemain.php']['processCmdmapClass'][] =
-        \BusyNoggin\StaticNotFound\Hook\DataHandlerSubscriber::class;
+        \BusyNoggin\StaticErrorPages\Hook\DataHandlerSubscriber::class;
     $GLOBALS['TYPO3_CONF_VARS']['SC_OPTIONS']['t3lib/class.t3lib_tcemain.php']['clearCachePostProc'][] =
-        \BusyNoggin\StaticNotFound\Hook\DataHandlerSubscriber::class . '->postProcessClearCache';
+        \BusyNoggin\StaticErrorPages\Hook\DataHandlerSubscriber::class . '->postProcessClearCache';
     $GLOBALS['TYPO3_CONF_VARS']['SC_OPTIONS']['t3lib/class.t3lib_tcemain.php']['processCmdmapClass'][] =
-        \BusyNoggin\StaticNotFound\Hook\DataHandlerSubscriber::class;
+        \BusyNoggin\StaticErrorPages\Hook\DataHandlerSubscriber::class;
 }
 
 if (!isset($GLOBALS['TYPO3_CONF_VARS']['SYS']['caching']['cacheConfigurations']['static_error_pages'])) {
