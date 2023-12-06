@@ -10,10 +10,13 @@ use BusyNoggin\StaticErrorPages\Event\AfterUrlFetchedEvent;
 use BusyNoggin\StaticErrorPages\Event\AfterUrlResolvedEvent;
 use BusyNoggin\StaticErrorPages\Event\BeforeUrlFetchEvent;
 use BusyNoggin\StaticErrorPages\Event\IsExpiredEvent;
+use GuzzleHttp\RequestOptions;
 use TYPO3\CMS\Core\Cache\CacheManager;
 use TYPO3\CMS\Core\Cache\Frontend\FrontendInterface;
 use TYPO3\CMS\Core\EventDispatcher\EventDispatcher;
+use TYPO3\CMS\Core\Http\RequestFactory;
 use TYPO3\CMS\Core\Site\SiteFinder;
+use TYPO3\CMS\Core\Utility\GeneralUtility;
 
 class StaticVersionFetcher
 {
@@ -57,13 +60,25 @@ class StaticVersionFetcher
         $urlEvent = new AfterUrlResolvedEvent($identifier, $verifySsl, $ttl, $url);
         $this->dispatcher->dispatch($urlEvent);
 
-        $curl = curl_init($urlEvent->getUrl());
-        curl_setopt($curl, CURLOPT_RETURNTRANSFER, true);
-        if (!$beforeEvent->isVerifySsl()) {
-            curl_setopt($curl, CURLOPT_SSL_VERIFYPEER, false);
+        $options = [];
+        if (!$verifySsl) {
+            $options[RequestOptions::VERIFY] = false;
         }
 
-        $source = curl_exec($curl);
+        $fetchUrl = $urlEvent->getUrl();
+
+        /** @var RequestFactory $requestFactory */
+        $requestFactory = GeneralUtility::makeInstance(RequestFactory::class);
+        $response = $requestFactory->request($fetchUrl, 'GET', $options);
+        if ($response->getStatusCode() >= 300) {
+            $source = $response->getReasonPhrase();
+            throw new \RuntimeException(
+                'Error handler could not fetch error page "' . $fetchUrl . '", reason: ' . $source,
+                1544172838
+            );
+        }
+
+        $source = $response->getBody()->getContents();
 
         $afterUrlEvent = new AfterUrlFetchedEvent($identifier, $verifySsl, $ttl, $url, $source);
         $this->dispatcher->dispatch($afterUrlEvent);
