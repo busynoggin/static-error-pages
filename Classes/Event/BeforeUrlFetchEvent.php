@@ -31,7 +31,7 @@ class BeforeUrlFetchEvent
 
     public function isVerifySsl(): bool
     {
-        return $this->noVerifySsl;
+        return $this->verifySsl;
     }
 
     public function setVerifySsl(bool $verifySsl): self
