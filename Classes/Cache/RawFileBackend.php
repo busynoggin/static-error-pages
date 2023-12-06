@@ -40,7 +40,8 @@ class RawFileBackend extends SimpleFileBackend implements TransientBackendInterf
 
     public function get($entryIdentifier)
     {
-        if (filemtime($this->cacheDirectory . $entryIdentifier . $this->cacheEntryFileExtension) < time()) {
+        $filePath = $this->cacheDirectory . $entryIdentifier . $this->cacheEntryFileExtension;
+        if (!file_exists($filePath) || filemtime($filePath) < time()) {
             return false;
         }
         return parent::get($entryIdentifier);
@@ -48,7 +49,8 @@ class RawFileBackend extends SimpleFileBackend implements TransientBackendInterf
 
     public function has($entryIdentifier): bool
     {
-        if (filemtime($this->cacheDirectory . $entryIdentifier . $this->cacheEntryFileExtension) < time()) {
+        $filePath = $this->cacheDirectory . $entryIdentifier . $this->cacheEntryFileExtension;
+        if (!file_exists($filePath) || filemtime($filePath) < time()) {
             return false;
         }
         return parent::has($entryIdentifier);
