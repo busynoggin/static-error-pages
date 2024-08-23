@@ -57,7 +57,7 @@ class NotFoundCommand extends Command
         $force = (bool) $input->getOption('force');
         $ttl = (integer) $input->getOption('ttl');
 
-        if ($force || $this->fetcher->isExpired($ttl)) {
+        if ($force || $this->fetcher->isExpired($identifier)) {
             $this->fetcher->fetchAndStoreStaticVersion($identifier, $noVerifySsl);
         }
 
