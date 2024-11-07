@@ -17,7 +17,7 @@ class AfterSourceReadEvent
     public function __construct(
         private int|string $identifier,
         private string $cacheIdentifier,
-        private string $source,
+        private ?string $source,
         private FrontendInterface $cache
     ) {
     }
@@ -32,12 +32,12 @@ class AfterSourceReadEvent
         return $this->cacheIdentifier;
     }
 
-    public function getSource(): string
+    public function getSource(): ?string
     {
         return $this->source;
     }
 
-    public function setSource(string $source): self
+    public function setSource(?string $source): self
     {
         $this->source = $source;
         return $this;
