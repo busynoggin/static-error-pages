@@ -50,12 +50,16 @@ class StaticVersionFetcher
         return $event->getSource();
     }
 
-    public function fetchAndStoreStaticVersion(int|string $identifier, bool $verifySsl = true, int $ttl = 0): void
-    {
+    public function fetchAndStoreStaticVersion(
+        int|string $identifier,
+        bool $verifySsl = true,
+        int $ttl = 0,
+        ?string $forcedUrl = null
+    ): void {
         $beforeEvent = new BeforeUrlFetchEvent($identifier, $verifySsl, $ttl);
         $this->dispatcher->dispatch($beforeEvent);
 
-        $url = $beforeEvent->getUrl() ?? $this->resolveUrlFromIdentifier($beforeEvent->getIdentifier());
+        $url = $beforeEvent->getUrl() ?? $forcedUrl ?? $this->resolveUrlFromIdentifier($beforeEvent->getIdentifier());
 
         $urlEvent = new AfterUrlResolvedEvent($identifier, $verifySsl, $ttl, $url);
         $this->dispatcher->dispatch($urlEvent);

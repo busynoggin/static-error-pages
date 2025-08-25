@@ -41,6 +41,14 @@ class NotFoundCommand extends Command
             3600
         );
         $this->addOption(
+            'fetch-url',
+            'u',
+            InputArgument::OPTIONAL,
+            'If provided, reads the error page source from this URL (absolute URL required) instead of attempting ' .
+            'to read it from the URL resolved from Site configuration. This option can be necessary if your web site ' .
+            'is running inside a container or behind a reverse proxy with URL rewriting - for example, within DDEV.'
+        );
+        $this->addOption(
             'no-verify-ssl',
             's',
             InputArgument::OPTIONAL | InputOption::VALUE_NONE,
@@ -56,9 +64,10 @@ class NotFoundCommand extends Command
         $noVerifySsl = (bool) $input->getOption('no-verify-ssl');
         $force = (bool) $input->getOption('force');
         $ttl = (integer) $input->getOption('ttl');
+        $url = $input->getOption('fetch-url');
 
         if ($force || $this->fetcher->isExpired($identifier)) {
-            $this->fetcher->fetchAndStoreStaticVersion($identifier, $noVerifySsl, $ttl);
+            $this->fetcher->fetchAndStoreStaticVersion($identifier, $noVerifySsl, $ttl, $url);
         }
 
         return 0;
