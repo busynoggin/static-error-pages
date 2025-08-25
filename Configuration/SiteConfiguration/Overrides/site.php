@@ -3,6 +3,7 @@
 $GLOBALS['SiteConfiguration']['site_errorhandling']['columns']['error_content_source'] = [
     'label' => 'Error Page Source',
     'description' => 'From where to read the HTML source of the error page, can be a TYPO3 page UID or an absolute URL',
+    'displayCond' => 'FIELD:errorPhpClassFQCN:=:BusyNoggin\StaticErrorPages\Handler\PageErrorHandler',
     'config' => [
         'type' => 'input',
         'renderType' => 'inputLink',
