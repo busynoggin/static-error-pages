@@ -29,7 +29,7 @@ Configuring a TYPO3 site to use this feature is relatively simple:
 
 * In the site configuration, create error handler sections for each of the error types you wish to handle this way,
   e.g. `404`, `403` and so on. Each type of error requires a separate error handler.
-* For each failure code, configure the "FQCN" of the handler: `BusyNoggin\StaticNotFound\Handler\PageErrorHandler`.
+* For each failure code, configure the "FQCN" of the handler: `BusyNoggin\StaticErrorPages\Handler\PageErrorHandler`.
 * For each failure code, configure the page (either select a TYPO3 page one or use a full URL).
 
 This enables the handling of the particular type/types of errors. Then, in order to generate the static files of the
