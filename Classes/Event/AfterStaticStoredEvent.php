@@ -10,8 +10,13 @@ namespace BusyNoggin\StaticErrorPages\Event;
  */
 class AfterStaticStoredEvent
 {
-    public function __construct(private int|string $identifier, private string $source, private ?int $ttl)
-    {
+    public function __construct(
+        private int|string $identifier,
+        private string $source,
+        private ?int $ttl,
+        private bool $verifySsl,
+        private ?string $forcedUrl
+    ) {
     }
 
     public function getIdentifier(): int|string
@@ -27,5 +32,15 @@ class AfterStaticStoredEvent
     public function getTtl(): ?int
     {
         return $this->ttl;
+    }
+
+    public function isVerifySsl(): bool
+    {
+        return $this->verifySsl;
+    }
+
+    public function getForcedUrl(): ?string
+    {
+        return $this->forcedUrl;
     }
 }

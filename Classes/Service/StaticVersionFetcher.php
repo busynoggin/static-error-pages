@@ -91,7 +91,13 @@ class StaticVersionFetcher
 
         $this->frontend->set($cacheIdentifier, $afterUrlEvent->getContent(), [], $ttl ?: null);
 
-        $afterStoreEvent = new AfterStaticStoredEvent($identifier, $afterUrlEvent->getContent(), $ttl ?: null);
+        $afterStoreEvent = new AfterStaticStoredEvent(
+            $identifier,
+            $afterUrlEvent->getContent(),
+            $ttl ?: null,
+            $verifySsl,
+            $forcedUrl
+        );
         $this->dispatcher->dispatch($afterStoreEvent);
     }
 
