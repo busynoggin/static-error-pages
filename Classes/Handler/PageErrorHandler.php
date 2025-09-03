@@ -38,9 +38,14 @@ class PageErrorHandler implements PageErrorHandlerInterface
         string $message,
         array $reasons = []
     ): ResponseInterface {
-        $identifier = $this->errorHandlerConfiguration['error_content_source'];
+        $identifier = $this->errorHandlerConfiguration['errorContentSource']
+            ?? $this->errorHandlerConfiguration['error_content_source'];
         $identifier = str_replace('t3://page?uid=', '', $identifier);
-        $source = $this->fetcher->readSourceCodeOfErrorPage($identifier);
+        if (ctype_digit($identifier)) {
+            $identifier = (integer) $identifier;
+        }
+
+        $source = $this->fetcher->readSourceCodeOfErrorPage($identifier, $request);
 
         $event = new ErrorPageEvent($this->statusCode, $source, $request, $message, $reasons);
         $this->dispatcher->dispatch($event);
