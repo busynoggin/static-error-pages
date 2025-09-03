@@ -15,7 +15,8 @@ class AfterUrlFetchedEvent
         private bool $verifySsl,
         private int $ttl,
         private string $url,
-        private string $content
+        private string $content,
+        private bool $allowCache = true
     ) {
     }
 
@@ -47,6 +48,17 @@ class AfterUrlFetchedEvent
     public function setContent(string $content): self
     {
         $this->content = $content;
+        return $this;
+    }
+
+    public function isAllowCache(): bool
+    {
+        return $this->allowCache;
+    }
+
+    public function setAllowCache(bool $allowCache): self
+    {
+        $this->allowCache = $allowCache;
         return $this;
     }
 }

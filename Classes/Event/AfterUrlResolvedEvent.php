@@ -14,7 +14,8 @@ class AfterUrlResolvedEvent
         private int|string $identifier,
         private bool $verifySsl,
         private int $ttl,
-        private string $url
+        private string $url,
+        private ?string $content = null
     ) {
     }
 
@@ -41,6 +42,17 @@ class AfterUrlResolvedEvent
     public function setUrl(string $url): self
     {
         $this->url = $url;
+        return $this;
+    }
+
+    public function getContent(): ?string
+    {
+        return $this->content;
+    }
+
+    public function setContent(?string $content): self
+    {
+        $this->content = $content;
         return $this;
     }
 }

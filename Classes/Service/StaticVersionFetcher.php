@@ -8,9 +8,11 @@ use BusyNoggin\StaticErrorPages\Event\AfterSourceReadEvent;
 use BusyNoggin\StaticErrorPages\Event\AfterStaticStoredEvent;
 use BusyNoggin\StaticErrorPages\Event\AfterUrlFetchedEvent;
 use BusyNoggin\StaticErrorPages\Event\AfterUrlResolvedEvent;
+use BusyNoggin\StaticErrorPages\Event\BeforeSourceReadEvent;
 use BusyNoggin\StaticErrorPages\Event\BeforeUrlFetchEvent;
 use BusyNoggin\StaticErrorPages\Event\IsExpiredEvent;
 use GuzzleHttp\RequestOptions;
+use Psr\Http\Message\ServerRequestInterface;
 use TYPO3\CMS\Core\Cache\CacheManager;
 use TYPO3\CMS\Core\Cache\Frontend\FrontendInterface;
 use TYPO3\CMS\Core\EventDispatcher\EventDispatcher;
@@ -30,24 +32,36 @@ class StaticVersionFetcher
         $this->frontend = $this->cacheManager->getCache('static_error_pages');
     }
 
-    public function readSourceCodeOfErrorPage(int|string $identifier): ?string
+    public function readSourceCodeOfErrorPage(int|string $identifier, ServerRequestInterface $request): ?string
     {
-        $cacheIdentifier = $this->convertUrlToCacheIdentifier($this->resolveUrlFromIdentifier($identifier));
-        if (($backend = $this->frontend->getBackend()) && $backend instanceof RawFileBackend) {
-            // Our own cache backend has a custom method that will return the source of the static file even if the
-            // file is expired. We want to use this method to avoid problems if an error is raised after expiry, before
-            // a new version of the static file is written.
-            $source = $backend->getWithoutExpirationCheck($cacheIdentifier);
-        } else {
-            // Other cache backends may return FALSE if the entry is expired. Those other types of backends need to be
-            // carefully handled to avoid them returning FALSE (in short: they must always be updated *before* expiry).
-            $source = $this->frontend->get($cacheIdentifier) ?: null;
+        $beforeReadEvent = new BeforeSourceReadEvent(
+            $identifier,
+            $this->convertUrlToCacheIdentifier($this->resolveUrlFromIdentifier($identifier)),
+            $request
+        );
+        $this->dispatcher->dispatch($beforeReadEvent);
+
+        $source = $beforeReadEvent->getSource();
+        $cacheIdentifier = $beforeReadEvent->getCacheIdentifier();
+
+        if ($source === null) {
+            if (($backend = $this->frontend->getBackend()) && $backend instanceof RawFileBackend) {
+                // Our own cache backend has a custom method that will return the source of the static file even if the
+                // file is expired. We want to use this method to avoid problems if an error is raised after expiry,
+                // before a new version of the static file is written.
+                $source = $backend->getWithoutExpirationCheck($cacheIdentifier);
+            } else {
+                // Other cache backends may return FALSE if the entry is expired. Those other types of backends need to
+                // be carefully handled to avoid them returning FALSE (in short: they must always be updated *before*
+                // expiry).
+                $source = $this->frontend->get($cacheIdentifier) ?: null;
+            }
         }
 
-        $event = new AfterSourceReadEvent($identifier, $cacheIdentifier, $source, $this->frontend);
-        $this->dispatcher->dispatch($event);
+        $afterReadEvent = new AfterSourceReadEvent($identifier, $cacheIdentifier, $source, $this->frontend);
+        $this->dispatcher->dispatch($afterReadEvent);
 
-        return $event->getSource();
+        return $afterReadEvent->getSource();
     }
 
     public function fetchAndStoreStaticVersion(
@@ -64,41 +78,50 @@ class StaticVersionFetcher
         $urlEvent = new AfterUrlResolvedEvent($identifier, $verifySsl, $ttl, $url);
         $this->dispatcher->dispatch($urlEvent);
 
-        $options = [];
-        if (!$verifySsl) {
-            $options[RequestOptions::VERIFY] = false;
+        $source = $urlEvent->getContent();
+
+        if ($source === null) {
+            $options = [];
+            if (!$verifySsl) {
+                $options[RequestOptions::VERIFY] = false;
+            }
+
+            $fetchUrl = $urlEvent->getUrl();
+
+            /** @var RequestFactory $requestFactory */
+            $requestFactory = GeneralUtility::makeInstance(RequestFactory::class);
+            $response = $requestFactory->request($fetchUrl, 'GET', $options);
+            if ($response->getStatusCode() >= 300) {
+                $source = $response->getReasonPhrase();
+                throw new \RuntimeException(
+                    'Error handler could not fetch error page "' . $fetchUrl . '", reason: ' . $source,
+                    1544172838
+                );
+            }
+
+            $source = $response->getBody()->getContents();
         }
-
-        $fetchUrl = $urlEvent->getUrl();
-
-        /** @var RequestFactory $requestFactory */
-        $requestFactory = GeneralUtility::makeInstance(RequestFactory::class);
-        $response = $requestFactory->request($fetchUrl, 'GET', $options);
-        if ($response->getStatusCode() >= 300) {
-            $source = $response->getReasonPhrase();
-            throw new \RuntimeException(
-                'Error handler could not fetch error page "' . $fetchUrl . '", reason: ' . $source,
-                1544172838
-            );
-        }
-
-        $source = $response->getBody()->getContents();
 
         $afterUrlEvent = new AfterUrlFetchedEvent($identifier, $verifySsl, $ttl, $url, $source);
         $this->dispatcher->dispatch($afterUrlEvent);
 
-        $cacheIdentifier = $this->convertUrlToCacheIdentifier($url);
+        if ($afterUrlEvent->isAllowCache()) {
+            $this->frontend->set(
+                $this->convertUrlToCacheIdentifier($url),
+                $afterUrlEvent->getContent(),
+                [],
+                $ttl ?: null
+            );
 
-        $this->frontend->set($cacheIdentifier, $afterUrlEvent->getContent(), [], $ttl ?: null);
-
-        $afterStoreEvent = new AfterStaticStoredEvent(
-            $identifier,
-            $afterUrlEvent->getContent(),
-            $ttl ?: null,
-            $verifySsl,
-            $forcedUrl
-        );
-        $this->dispatcher->dispatch($afterStoreEvent);
+            $afterStoreEvent = new AfterStaticStoredEvent(
+                $identifier,
+                $afterUrlEvent->getContent(),
+                $ttl ?: null,
+                $verifySsl,
+                $forcedUrl
+            );
+            $this->dispatcher->dispatch($afterStoreEvent);
+        }
     }
 
     public function isExpired(int|string $identifier): bool

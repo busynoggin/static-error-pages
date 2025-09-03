@@ -131,8 +131,10 @@ PSR-14 Events
 
 Several events are included with the extension:
 
-* `BusyNoggin\StaticErrorPages\Event\AfterSourceReadEvent` which allows you to the HTML source after it is read from
-  a static file.
+* `BusyNoggin\StaticErrorPages\Event\BeforeSourceReadEvent` which allows you to provide alternative HTML source or
+  change the identifier and/or cache identifier of the error page being fetched.
+* `BusyNoggin\StaticErrorPages\Event\AfterSourceReadEvent` which allows you to alter the HTML source after it is read
+  from a static file.
 * `BusyNoggin\StaticErrorPages\Event\AfterStaticStoredEvent` which allows you to trigger an action right after a static
   file has been written.
 * `BusyNoggin\StaticErrorPages\Event\AfterUrlFetchedEvent` which allows you to change the HTML of a fetched URL before
