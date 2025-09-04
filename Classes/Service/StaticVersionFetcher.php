@@ -148,7 +148,7 @@ class StaticVersionFetcher
         return (string) $url;
     }
 
-    private function convertUrlToCacheIdentifier(string $url): string
+    public function convertUrlToCacheIdentifier(string $url): string
     {
         /** @var string $replaced */
         $replaced = str_replace([':', '/', '?', '=', '.', '%', '&'], '_', $url);
