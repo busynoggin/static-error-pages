@@ -47,6 +47,13 @@ class PageErrorHandler implements PageErrorHandlerInterface
 
         $source = $this->fetcher->readSourceCodeOfErrorPage($identifier, $request);
 
+        if ($source === null) {
+            throw new \UnexpectedValueException(
+                'Source could not be retrieved for error page with ID: ' . $identifier,
+                1763637284
+            );
+        }
+
         $event = new ErrorPageEvent($this->statusCode, $source, $request, $message, $reasons);
         $this->dispatcher->dispatch($event);
 
